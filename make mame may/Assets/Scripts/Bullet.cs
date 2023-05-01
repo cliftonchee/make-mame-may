@@ -25,7 +25,7 @@ public class Bullet : MonoBehaviour
     }
 
     IEnumerator SelfDestruct(){
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSeconds(3f);
         Destroy(gameObject);
     }
 

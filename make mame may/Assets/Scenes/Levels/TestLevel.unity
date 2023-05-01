@@ -3181,6 +3181,7 @@ GameObject:
   - component: {fileID: 1605631576}
   - component: {fileID: 1605631577}
   - component: {fileID: 1605631578}
+  - component: {fileID: 1605631579}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -3430,6 +3431,21 @@ MonoBehaviour:
   attackRange: 0.35
   attackDamage: 40
   attackRate: 2
+--- !u!114 &1605631579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1605631569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9b87b981dceaac42aad9e9c36b93a76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  firePoint: {fileID: 1404566468}
+  bulletPrefab: {fileID: 9166836647688797160, guid: ba8f5424792836e4da145c3a7f41b20b, type: 3}
+  bulletCooldown: 0.5
 --- !u!1 &1951734409
 GameObject:
   m_ObjectHideFlags: 0
