@@ -135,38 +135,44 @@ namespace Player
                 wallJumpingCounter -= Time.deltaTime;
             }
 
-        if (Input.GetButtonDown("Jump") && wallJumpingCounter > 0f){
-            isWallJumping = true;
-            Vector2 force = new Vector2(wallJumpingPower.x, wallJumpingPower.y);
-		    force.x *= wallJumpingDirection; //apply force in opposite direction of wall
+            if (Input.GetButtonDown("Jump") && wallJumpingCounter > 0f)
+            {
+                isWallJumping = true;
+                Vector2 force = new Vector2(wallJumpingPower.x, wallJumpingPower.y);
+                force.x *= wallJumpingDirection; //apply force in opposite direction of wall
 
-		    if (Mathf.Sign(rb2D.velocity.x) != Mathf.Sign(force.x)){
-			    force.x -= rb2D.velocity.x;
+                if (Mathf.Sign(rb2d.velocity.x) != Mathf.Sign(force.x))
+                {
+                    force.x -= rb2d.velocity.x;
+                }
+
+                if (rb2d.velocity.y < 0)
+                { //checks whether player is falling, if so we subtract the velocity.y (counteracting force of gravity). This ensures the player always reaches our desired jump force or greater
+                    force.y -= rb2d.velocity.y;
+                }
+                // Unlike in the run we want to use the Impulse mode.
+                // The default mode will apply are force instantly ignoring masss
+                rb2d.AddForce(force, ForceMode2D.Impulse);
+                wallJumpingCounter = 0f;
+                // if (transform.localScale.x != wallJumpingDirection){
+                //     // Flip();
+                // }
+
+                Invoke(nameof(StopWallJumping), wallJumpingDuration);
             }
-
-		    if (rb2D.velocity.y < 0){ //checks whether player is falling, if so we subtract the velocity.y (counteracting force of gravity). This ensures the player always reaches our desired jump force or greater
-			    force.y -= rb2D.velocity.y;
-            }
-		//Unlike in the run we want to use the Impulse mode.
-		//The default mode will apply are force instantly ignoring masss
-		    rb2D.AddForce(force, ForceMode2D.Impulse);
-            wallJumpingCounter = 0f;
-            // if (transform.localScale.x != wallJumpingDirection){
-            //     // Flip();
-            // }
-
-            Invoke(nameof(StopWallJumping), wallJumpingDuration);
         }
-    }
 
-    private void StopWallJumping(){
-        isWallJumping = false;
-    }
+        private void StopWallJumping()
+        {
+            isWallJumping = false;
+        }
 
-    private void Flip(){
-        Debug.Log("Flipped");
-        Vector3 theScale = transform.localScale;
-		theScale.x *= -1;
-		transform.localScale = theScale;
+        private void Flip()
+        {
+            Debug.Log("Flipped");
+            Vector3 theScale = transform.localScale;
+            theScale.x *= -1;
+            transform.localScale = theScale;
+        }
     }
 }
