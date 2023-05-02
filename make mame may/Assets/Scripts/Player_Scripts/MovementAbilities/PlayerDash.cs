@@ -4,7 +4,7 @@ namespace Player
     {
         using UnityEngine;
 
-        public class PlayerDash : MonoBehaviour
+        public class Dash : MonoBehaviour
         {
             // TODO: Lock character's y position when dashing
             // TODO: Double jump implementation
@@ -16,7 +16,7 @@ namespace Player
             bool isDashing = false;
             float distanceTraveled = 0f;
 
-            public void Dash()
+            public void Trigger()
             {
                 if (remainingDashCooldown <= 0f && !isDashing)
                 {

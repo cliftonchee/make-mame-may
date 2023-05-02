@@ -7,8 +7,8 @@ namespace Player
         public CharacterController2D controller;
         public Animator animator;
         public Rigidbody2D rb2d;
-        private PlayerInputActions controls;        // Controls using Unity's InputSystem (newer control scheme)
-        private Abilities.PlayerDash playerDash;    // TODO: Replace playerdash with an abilities controller
+        private PlayerInputActions controls;    // Controls using Unity's InputSystem (newer control scheme)
+        private Abilities.Dash dash;            // TODO: (not priority) introduce an abilities controller to consolidate all code related to abilities
 
         // Movement variables
         public float runSpeed = 40f;
@@ -36,10 +36,10 @@ namespace Player
             // Initialise the controls
             controls = new PlayerInputActions();
 
-            playerDash = gameObject.AddComponent<Abilities.PlayerDash>();
+            dash = gameObject.AddComponent<Abilities.Dash>();
 
             // Adds a callback function that fires when the controls corresponding to "Dash" is pressed.
-            controls.Player.Dash.performed += _ => playerDash.Dash();
+            controls.Player.Dash.performed += _ => dash.Trigger();
         }
 
         private void OnEnable()
@@ -147,9 +147,11 @@ namespace Player
                 }
 
                 if (rb2d.velocity.y < 0)
-                { //checks whether player is falling, if so we subtract the velocity.y (counteracting force of gravity). This ensures the player always reaches our desired jump force or greater
+                {
+                    //checks whether player is falling, if so we subtract the velocity.y (counteracting force of gravity). This ensures the player always reaches our desired jump force or greater
                     force.y -= rb2d.velocity.y;
                 }
+
                 // Unlike in the run we want to use the Impulse mode.
                 // The default mode will apply are force instantly ignoring masss
                 rb2d.AddForce(force, ForceMode2D.Impulse);
@@ -170,9 +172,7 @@ namespace Player
         private void Flip()
         {
             Debug.Log("Flipped");
-            Vector3 theScale = transform.localScale;
-            theScale.x *= -1;
-            transform.localScale = theScale;
+            transform.Rotate(0f, 180f, 0f);
         }
     }
 }
