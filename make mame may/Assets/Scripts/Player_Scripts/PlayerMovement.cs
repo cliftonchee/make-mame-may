@@ -1,168 +1,166 @@
-using UnityEngine;
-
-public class PlayerMovement : MonoBehaviour
+namespace Player
 {
-    public CharacterController2D controller;
-    public Animator animator;
-    public Rigidbody2D rb2D;
+    using UnityEngine;
 
-    public float runSpeed = 40f;
-    float horizontalMove = 0f;
-    bool jump = false;
-    bool crouch = false;
-
-    // TODO: Lock character's y position when dashing
-    // TODO: Double jump implementation
-
-    // Variables for dash implementation
-    float dashForce = 500f;
-    float maxDashDistance = .1f;
-    float dashCooldown = 2f; // Cooldown time in seconds
-    float remainingDashCooldown = 0f;
-    bool isDashing = false;
-    float distanceTraveled = 0f;
-
-    [SerializeField] private Transform groundCheck;
-    [SerializeField] private LayerMask groundLayer;
-
-    [SerializeField] private Transform wallCheck;
-    [SerializeField] private LayerMask wallLayer;
-    private bool isWallDetected;
-    private bool isWallSliding;
-    private float wallSlidingSpeed = 2f;
-
-    private bool isWallJumping;
-    private float wallJumpingDirection;
-    private float wallJumpingTime = 0.2f;
-    private float wallJumpingCounter;
-    private float wallJumpingDuration = 0.4f;
-    private Vector2 wallJumpingPower = new Vector2(3f, 5f);
-
-    // Update is called once per frame
-    void Update()
+    public class PlayerMovement : MonoBehaviour
     {
-        horizontalMove = Input.GetAxisRaw("Horizontal") * runSpeed;
+        public CharacterController2D controller;
+        public Animator animator;
+        public Rigidbody2D rb2d;
+        private PlayerInputActions controls;        // Controls using Unity's InputSystem (newer control scheme)
+        private Abilities.PlayerDash playerDash;    // TODO: Replace playerdash with an abilities controller
 
-        animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
+        // Movement variables
+        public float runSpeed = 40f;
+        float horizontalMove = 0f;
+        bool jump = false;
+        bool crouch = false;
 
-        if (Input.GetButtonDown("Jump"))
+        // Variables for wall jump
+        [SerializeField] private Transform groundCheck;
+        [SerializeField] private LayerMask groundLayer;
+        [SerializeField] private Transform wallCheck;
+        [SerializeField] private LayerMask wallLayer;
+        private bool isWallDetected;
+        private bool isWallSliding;
+        private float wallSlidingSpeed = 2f;
+        private bool isWallJumping;
+        private float wallJumpingDirection;
+        private float wallJumpingTime = 0.2f;
+        private float wallJumpingCounter;
+        private float wallJumpingDuration = 0.4f;
+        private Vector2 wallJumpingPower = new Vector2(3f, 5f);
+
+        private void Awake()
         {
-            jump = true;
-            animator.SetBool("IsJumping", true);
+            // Initialise the controls
+            controls = new PlayerInputActions();
+
+            playerDash = gameObject.AddComponent<Abilities.PlayerDash>();
+
+            // Adds a callback function that fires when the controls corresponding to "Dash" is pressed.
+            controls.Player.Dash.performed += _ => playerDash.Dash();
         }
 
-        if (Input.GetButtonDown("Crouch"))
+        private void OnEnable()
         {
-            crouch = true;
-        }
-        else if (Input.GetButtonUp("Crouch"))
-        {
-            crouch = false;
+            controls.Player.Dash.Enable();
         }
 
-        if (remainingDashCooldown <= 0f)
+        private void OnDisable()
         {
-            if (Input.GetKeyDown(KeyCode.LeftShift) && !isDashing)
+            controls.Player.Dash.Disable();
+        }
+
+        void Update()
+        {
+            horizontalMove = Input.GetAxisRaw("Horizontal") * runSpeed;
+
+            animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
+
+            if (Input.GetButtonDown("Jump"))
             {
-                isDashing = true;
+                jump = true;
+                animator.SetBool("IsJumping", true);
             }
-        }
-        WallSlide();
-        WallJump();
-    }
 
-    public void OnLanding()
-    {
-        animator.SetBool("IsJumping", false);
-    }
-
-    public void OnCrouch(bool isCrouching)
-    {
-        animator.SetBool("IsCrouching", isCrouching);
-    }
-
-    void FixedUpdate()
-    {
-        // Move character
-        if(!isWallJumping){
-            controller.Move(horizontalMove * Time.fixedDeltaTime, crouch, jump);
-            jump = false;
-        }
-
-        if (isDashing)
-        {
-            Vector2 dashDirection = transform.right * Mathf.Sign(transform.localScale.x);
-            rb2D.AddForce(dashDirection * dashForce);
-
-            distanceTraveled += dashDirection.magnitude * Time.fixedDeltaTime;
-
-            // After travelling the specified dash distance
-            if (distanceTraveled >= maxDashDistance)
+            if (Input.GetButtonDown("Crouch"))
             {
-                isDashing = false;
-                distanceTraveled = 0f;
-                remainingDashCooldown = dashCooldown; // Start the cooldown timer
+                crouch = true;
+            }
+            else if (Input.GetButtonUp("Crouch"))
+            {
+                crouch = false;
+            }
+
+            WallSlide();
+            WallJump();
+        }
+
+        public void OnLanding()
+        {
+            animator.SetBool("IsJumping", false);
+        }
+
+        public void OnCrouch(bool isCrouching)
+        {
+            animator.SetBool("IsCrouching", isCrouching);
+        }
+
+        void FixedUpdate()
+        {
+            // Move character
+            if (!isWallJumping)
+            {
+                controller.Move(horizontalMove * Time.fixedDeltaTime, crouch, jump);
+                jump = false;
             }
         }
 
-        if (remainingDashCooldown > 0f)
+        private bool IsWalled()
         {
-            remainingDashCooldown -= Time.fixedDeltaTime;
+            return Physics2D.OverlapCircle(wallCheck.position, 0.2f, wallLayer);
         }
-    }
 
-    private bool IsWalled(){
-        return Physics2D.OverlapCircle(wallCheck.position, 0.2f, wallLayer);
-    }
-
-    private bool IsGrounded(){
-        return Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
-    }
-
-    private void WallSlide(){
-        if (IsWalled() && !IsGrounded() && horizontalMove != 0f)
+        private bool IsGrounded()
         {
-            isWallSliding = true;
-            rb2D.velocity = new Vector2(rb2D.velocity.x, Mathf.Clamp(rb2D.velocity.y, -wallSlidingSpeed, float.MaxValue));
+            return Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
         }
-        else{
-            isWallSliding = false;
-        }
-    }
 
-    private void WallJump(){
-        if (isWallSliding){
+        private void WallSlide()
+        {
+            if (IsWalled() && !IsGrounded() && horizontalMove != 0f)
+            {
+                isWallSliding = true;
+                rb2d.velocity = new Vector2(rb2d.velocity.x, Mathf.Clamp(rb2d.velocity.y, -wallSlidingSpeed, float.MaxValue));
+            }
+            else
+            {
+                isWallSliding = false;
+            }
+        }
+
+        private void WallJump()
+        {
+            if (isWallSliding)
+            {
+                isWallJumping = false;
+                wallJumpingDirection = -transform.localScale.x;
+                wallJumpingCounter = wallJumpingTime;
+
+                CancelInvoke(nameof(StopWallJumping));
+            }
+            else
+            {
+                wallJumpingCounter -= Time.deltaTime;
+            }
+
+            if (Input.GetButtonDown("Jump") && wallJumpingCounter > 0f)
+            {
+                isWallJumping = true;
+                rb2d.velocity = new Vector2(wallJumpingDirection * wallJumpingPower.x, wallJumpingPower.y);
+                wallJumpingCounter = 0f;
+
+                if (transform.localScale.x != wallJumpingDirection)
+                {
+                    Flip();
+                }
+
+                Invoke(nameof(StopWallJumping), wallJumpingDuration);
+            }
+        }
+
+        private void StopWallJumping()
+        {
             isWallJumping = false;
-            wallJumpingDirection = -transform.localScale.x;
-            wallJumpingCounter = wallJumpingTime;
-
-            CancelInvoke(nameof(StopWallJumping));
-        }
-        else{
-            wallJumpingCounter -= Time.deltaTime;
+            Flip();
         }
 
-        if (Input.GetButtonDown("Jump") && wallJumpingCounter > 0f){
-            isWallJumping = true;
-            rb2D.velocity = new Vector2(wallJumpingDirection * wallJumpingPower.x, wallJumpingPower.y);
-            wallJumpingCounter = 0f;
-
-            if (transform.localScale.x != wallJumpingDirection){
-                Flip();
-            }
-
-            Invoke(nameof(StopWallJumping), wallJumpingDuration);
+        private void Flip()
+        {
+            Vector3 theScale = transform.localScale;
+            theScale.x *= -1;
+            transform.localScale = theScale;
         }
-    }
-
-    private void StopWallJumping(){
-        isWallJumping = false;
-        Flip();
-    }
-
-    private void Flip(){
-        Vector3 theScale = transform.localScale;
-		theScale.x *= -1;
-		transform.localScale = theScale;
     }
 }

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerMeleeCombat : MonoBehaviour
@@ -20,7 +18,7 @@ public class PlayerMeleeCombat : MonoBehaviour
     {
         if (Time.time >= nextAttackTime)
         {
-            if (Input.GetKeyDown(KeyCode.Mouse0)) 
+            if (Input.GetKeyDown(KeyCode.Mouse0))
             {
                 Attack();
                 nextAttackTime = Time.time + 1f / attackRate;
@@ -29,7 +27,7 @@ public class PlayerMeleeCombat : MonoBehaviour
 
     }
 
-    void Attack() 
+    void Attack()
     {
         // Play attack animation
         // TODO: Add attack animation
@@ -40,13 +38,13 @@ public class PlayerMeleeCombat : MonoBehaviour
             attackPoint.position, attackRange, enemyLayers);
 
         // Damage them
-        foreach(Collider2D enemy in hitEnemies)
+        foreach (Collider2D enemy in hitEnemies)
         {
             enemy.GetComponent<Enemy>().TakeDamage(attackDamage);
         }
     }
 
-    void OnDrawGizmosSelected() 
+    void OnDrawGizmosSelected()
     {
         if (attackPoint == null)
         {
