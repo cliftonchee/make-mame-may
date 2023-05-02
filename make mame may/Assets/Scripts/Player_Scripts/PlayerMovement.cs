@@ -27,10 +27,13 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField] private Transform wallCheck;
     [SerializeField] private LayerMask wallLayer;
+
+    //Wall sliding
     private bool isWallDetected;
     private bool isWallSliding;
     private float wallSlidingSpeed = 2f;
 
+    //Wall jumping
     private bool isWallJumping;
     private float wallJumpingDirection;
     private float wallJumpingTime = 0.2f;
@@ -144,12 +147,23 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.GetButtonDown("Jump") && wallJumpingCounter > 0f){
             isWallJumping = true;
-            rb2D.velocity = new Vector2(wallJumpingDirection * wallJumpingPower.x, wallJumpingPower.y);
-            wallJumpingCounter = 0f;
+            Vector2 force = new Vector2(wallJumpingPower.x, wallJumpingPower.y);
+		    force.x *= wallJumpingDirection; //apply force in opposite direction of wall
 
-            if (transform.localScale.x != wallJumpingDirection){
-                Flip();
+		    if (Mathf.Sign(rb2D.velocity.x) != Mathf.Sign(force.x)){
+			    force.x -= rb2D.velocity.x;
             }
+
+		    if (rb2D.velocity.y < 0){ //checks whether player is falling, if so we subtract the velocity.y (counteracting force of gravity). This ensures the player always reaches our desired jump force or greater
+			    force.y -= rb2D.velocity.y;
+            }
+		//Unlike in the run we want to use the Impulse mode.
+		//The default mode will apply are force instantly ignoring masss
+		    rb2D.AddForce(force, ForceMode2D.Impulse);
+            wallJumpingCounter = 0f;
+            // if (transform.localScale.x != wallJumpingDirection){
+            //     // Flip();
+            // }
 
             Invoke(nameof(StopWallJumping), wallJumpingDuration);
         }
@@ -157,10 +171,10 @@ public class PlayerMovement : MonoBehaviour
 
     private void StopWallJumping(){
         isWallJumping = false;
-        Flip();
     }
 
     private void Flip(){
+        Debug.Log("Flipped");
         Vector3 theScale = transform.localScale;
 		theScale.x *= -1;
 		transform.localScale = theScale;
