@@ -135,32 +135,38 @@ namespace Player
                 wallJumpingCounter -= Time.deltaTime;
             }
 
-            if (Input.GetButtonDown("Jump") && wallJumpingCounter > 0f)
-            {
-                isWallJumping = true;
-                rb2d.velocity = new Vector2(wallJumpingDirection * wallJumpingPower.x, wallJumpingPower.y);
-                wallJumpingCounter = 0f;
+        if (Input.GetButtonDown("Jump") && wallJumpingCounter > 0f){
+            isWallJumping = true;
+            Vector2 force = new Vector2(wallJumpingPower.x, wallJumpingPower.y);
+		    force.x *= wallJumpingDirection; //apply force in opposite direction of wall
 
-                if (transform.localScale.x != wallJumpingDirection)
-                {
-                    Flip();
-                }
-
-                Invoke(nameof(StopWallJumping), wallJumpingDuration);
+		    if (Mathf.Sign(rb2D.velocity.x) != Mathf.Sign(force.x)){
+			    force.x -= rb2D.velocity.x;
             }
-        }
 
-        private void StopWallJumping()
-        {
-            isWallJumping = false;
-            Flip();
-        }
+		    if (rb2D.velocity.y < 0){ //checks whether player is falling, if so we subtract the velocity.y (counteracting force of gravity). This ensures the player always reaches our desired jump force or greater
+			    force.y -= rb2D.velocity.y;
+            }
+		//Unlike in the run we want to use the Impulse mode.
+		//The default mode will apply are force instantly ignoring masss
+		    rb2D.AddForce(force, ForceMode2D.Impulse);
+            wallJumpingCounter = 0f;
+            // if (transform.localScale.x != wallJumpingDirection){
+            //     // Flip();
+            // }
 
-        private void Flip()
-        {
-            Vector3 theScale = transform.localScale;
-            theScale.x *= -1;
-            transform.localScale = theScale;
+            Invoke(nameof(StopWallJumping), wallJumpingDuration);
         }
+    }
+
+    private void StopWallJumping(){
+        isWallJumping = false;
+    }
+
+    private void Flip(){
+        Debug.Log("Flipped");
+        Vector3 theScale = transform.localScale;
+		theScale.x *= -1;
+		transform.localScale = theScale;
     }
 }
