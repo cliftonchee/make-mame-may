@@ -4,7 +4,7 @@ namespace Player
     {
         using UnityEngine;
 
-        public class Dash : MonoBehaviour
+        public class DashAbility : MonoBehaviour
         {
             // TODO: Lock character's y position when dashing
             // TODO: Double jump implementation

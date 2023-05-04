@@ -8,7 +8,7 @@ namespace Player
         public Animator animator;
         public Rigidbody2D rb2d;
         private PlayerInputActions controls;    // Controls using Unity's InputSystem (newer control scheme)
-        private Abilities.Dash dash;            // TODO: (not priority) introduce an abilities controller to consolidate all code related to abilities
+        private Abilities.DashAbility dash;            // TODO: (not priority) introduce an abilities controller to consolidate all code related to abilities
 
         // Movement variables
         public float runSpeed = 40f;
@@ -36,7 +36,7 @@ namespace Player
             // Initialise the controls
             controls = new PlayerInputActions();
 
-            dash = gameObject.AddComponent<Abilities.Dash>();
+            dash = gameObject.AddComponent<Abilities.DashAbility>();
 
             // Adds a callback function that fires when the controls corresponding to "Dash" is pressed.
             controls.Player.Dash.performed += _ => dash.Trigger();
