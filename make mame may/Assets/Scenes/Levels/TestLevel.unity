@@ -3214,6 +3214,7 @@ GameObject:
   - component: {fileID: 1605631577}
   - component: {fileID: 1605631578}
   - component: {fileID: 1605631579}
+  - component: {fileID: 1605631580}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -3420,6 +3421,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 1605631573}
+  newControllerTest: {fileID: 1605631580}
   animator: {fileID: 1605631577}
   rb2d: {fileID: 1605631572}
   runSpeed: 40
@@ -3487,6 +3489,21 @@ MonoBehaviour:
   firePoint: {fileID: 1404566468}
   bulletPrefab: {fileID: 9166836647688797160, guid: ba8f5424792836e4da145c3a7f41b20b, type: 3}
   bulletCooldown: 0.5
+--- !u!114 &1605631580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1605631569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc7492f2af1b7344f9f990c06e63e25b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  acceleration: 1
+  maxSpeed: 0.25
+  velocityPower: 2
 --- !u!1 &1777702321
 GameObject:
   m_ObjectHideFlags: 0
