@@ -1,6 +1,7 @@
 namespace Player
 {
     using UnityEngine;
+    using System.Collections;
 
     public class PlayerMovement : MonoBehaviour
     {
@@ -8,7 +9,8 @@ namespace Player
         public Animator animator;
         public Rigidbody2D rb2d;
         private PlayerInputActions controls;    // Controls using Unity's InputSystem (newer control scheme)
-        private Abilities.Dash dash;            // TODO: (not priority) introduce an abilities controller to consolidate all code related to abilities
+        private Abilities.Dash dash;
+        private Abilities.WallJump walljump;           // TODO: (not priority) introduce an abilities controller to consolidate all code related to abilities
 
         // Movement variables
         public float runSpeed = 40f;
@@ -17,19 +19,11 @@ namespace Player
         bool crouch = false;
 
         // Variables for wall jump
-        [SerializeField] private Transform groundCheck;
-        [SerializeField] private LayerMask groundLayer;
-        [SerializeField] private Transform wallCheck;
-        [SerializeField] private LayerMask wallLayer;
-        private bool isWallDetected;
-        private bool isWallSliding;
-        private float wallSlidingSpeed = 2f;
-        private bool isWallJumping;
-        private float wallJumpingDirection;
-        private float wallJumpingTime = 0.2f;
-        private float wallJumpingCounter;
-        private float wallJumpingDuration = 0.4f;
-        private Vector2 wallJumpingPower = new Vector2(3f, 5f);
+        [SerializeField] public Transform groundCheck;
+        [SerializeField] public LayerMask groundLayer;
+        [SerializeField] public Transform wallCheck;
+        [SerializeField] public LayerMask wallLayer;
+
 
         private void Awake()
         {
@@ -37,6 +31,12 @@ namespace Player
             controls = new PlayerInputActions();
 
             dash = gameObject.AddComponent<Abilities.Dash>();
+            walljump = gameObject.AddComponent<Abilities.WallJump>();
+
+            walljump.GroundCheck = groundCheck;
+            walljump.GroundLayer = groundLayer;
+            walljump.WallCheck = wallCheck;
+            walljump.WallLayer = wallLayer;
 
             // Adds a callback function that fires when the controls corresponding to "Dash" is pressed.
             controls.Player.Dash.performed += _ => dash.Trigger();
@@ -54,7 +54,10 @@ namespace Player
 
         void Update()
         {
-            horizontalMove = Input.GetAxisRaw("Horizontal") * runSpeed;
+            if (!walljump.isWallJumping && !walljump.isWallSliding)
+            {
+                horizontalMove = Input.GetAxisRaw("Horizontal") * runSpeed;
+            }
 
             animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
 
@@ -73,8 +76,7 @@ namespace Player
                 crouch = false;
             }
 
-            WallSlide();
-            WallJump();
+
         }
 
         public void OnLanding()
@@ -90,89 +92,13 @@ namespace Player
         void FixedUpdate()
         {
             // Move character
-            if (!isWallJumping)
+            if (!walljump.isWallJumping && !walljump.isWallSliding)
             {
                 controller.Move(horizontalMove * Time.fixedDeltaTime, crouch, jump);
                 jump = false;
             }
+
         }
 
-        private bool IsWalled()
-        {
-            return Physics2D.OverlapCircle(wallCheck.position, 0.2f, wallLayer);
-        }
-
-        private bool IsGrounded()
-        {
-            return Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
-        }
-
-        private void WallSlide()
-        {
-            if (IsWalled() && !IsGrounded() && horizontalMove != 0f)
-            {
-                isWallSliding = true;
-                rb2d.velocity = new Vector2(rb2d.velocity.x, Mathf.Clamp(rb2d.velocity.y, -wallSlidingSpeed, float.MaxValue));
-            }
-            else
-            {
-                isWallSliding = false;
-            }
-        }
-
-        private void WallJump()
-        {
-            if (isWallSliding)
-            {
-                isWallJumping = false;
-                wallJumpingDirection = -transform.localScale.x;
-                wallJumpingCounter = wallJumpingTime;
-
-                CancelInvoke(nameof(StopWallJumping));
-            }
-            else
-            {
-                wallJumpingCounter -= Time.deltaTime;
-            }
-
-            if (Input.GetButtonDown("Jump") && wallJumpingCounter > 0f)
-            {
-                isWallJumping = true;
-                Vector2 force = new Vector2(wallJumpingPower.x, wallJumpingPower.y);
-                force.x *= wallJumpingDirection; //apply force in opposite direction of wall
-
-                if (Mathf.Sign(rb2d.velocity.x) != Mathf.Sign(force.x))
-                {
-                    force.x -= rb2d.velocity.x;
-                }
-
-                if (rb2d.velocity.y < 0)
-                {
-                    //checks whether player is falling, if so we subtract the velocity.y (counteracting force of gravity). This ensures the player always reaches our desired jump force or greater
-                    force.y -= rb2d.velocity.y;
-                }
-
-                // Unlike in the run we want to use the Impulse mode.
-                // The default mode will apply are force instantly ignoring masss
-                rb2d.AddForce(force, ForceMode2D.Impulse);
-                wallJumpingCounter = 0f;
-                // if (transform.localScale.x != wallJumpingDirection){
-                //     // Flip();
-                // }
-
-                Invoke(nameof(StopWallJumping), wallJumpingDuration);
-            }
-        }
-
-        private void StopWallJumping()
-        {
-            isWallJumping = false;
-        }
-
-        private void Flip()
-        {
-            Debug.Log("Flipped");
-            transform.Rotate(0f, 180f, 0f);
-        }
     }
 }
