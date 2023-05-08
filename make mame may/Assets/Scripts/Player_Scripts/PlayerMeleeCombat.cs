@@ -40,7 +40,7 @@ public class PlayerMeleeCombat : MonoBehaviour
         // Damage them
         foreach (Collider2D enemy in hitEnemies)
         {
-            enemy.GetComponent<Enemy>().TakeDamage(attackDamage);
+            enemy.GetComponent<Enemy.EnemyInit>().TakeDamage(attackDamage);
         }
     }
 
